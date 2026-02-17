@@ -72,7 +72,7 @@ public class Lexer {
                 if (match('=')) {
                     addToken(BANG_EQUAL);
                 } else {
-                    Lack.error(line, "Unexpected character.");
+                    Lack.error(line, "Unexpected character " + c);
                 }
                 break;
             case '=': addToken(match('=') ? EQUAL_EQUAL : EQUAL); break;
@@ -88,7 +88,7 @@ public class Lexer {
                 } else if (isAlpha(c)) {
                     identifier();
                 } else {
-                    Lack.error(line, "Unexpected character.");
+                    Lack.error(line, "Unexpected character " + c);
                     break;
                 }
         }
@@ -146,7 +146,7 @@ public class Lexer {
         }
 
         if (isAtEnd()) {
-            Lack.error(line, "Unterminated string.");
+            Lack.error(line, "Unterminated string");
             return;
         }
 

@@ -46,13 +46,27 @@ public class Lack {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.lexTokens();
 
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
+        // for (Token token : tokens) {
+        //     System.out.println(token);
+        // }
+
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+
+        if (hadError) return;
+        System.out.println(new AstPrinter().print(expression));
     }
 
     static void error(int line, String msg) {
         report(line, "", msg);
+    }
+
+    static void error(Token token, String msg) {
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", msg);
+        } else {
+            report(token.line, "at '"+token.lexeme+"'", msg);
+        }
     }
 
     private static void report(int line, String location, String msg) {
