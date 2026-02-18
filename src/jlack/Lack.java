@@ -9,7 +9,10 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Lack {
+    private static final Interpreter interpreter = new Interpreter();
+
     static boolean hadError = false;
+    static boolean hadRuntimeError = false;
 
     public static void main(String[] args) throws IOException {
         if (args.length == 0) {
@@ -40,6 +43,7 @@ public class Lack {
         run(new String(bytes, Charset.defaultCharset()));
 
         if (hadError) System.exit(65);
+        if (hadRuntimeError) System.exit(70);
     }
 
     public static void run(String source) {
@@ -54,7 +58,8 @@ public class Lack {
         Expr expression = parser.parse();
 
         if (hadError) return;
-        System.out.println(new AstPrinter().print(expression));
+        // System.out.println(new AstPrinter().print(expression));
+        interpreter.interpret(expression);
     }
 
     static void error(int line, String msg) {
@@ -63,14 +68,23 @@ public class Lack {
 
     static void error(Token token, String msg) {
         if (token.type == TokenType.EOF) {
-            report(token.line, " at end", msg);
+            report(token.line, "at end", msg);
         } else {
             report(token.line, "at '"+token.lexeme+"'", msg);
         }
     }
 
     private static void report(int line, String location, String msg) {
-        System.err.println(String.format((location == "" ? "<line %d> Error%s: %s" : "<line %d> Error %s: %s"), line, location, msg));
+        System.err.println(String.format(
+            (location == "" ? "<line %d> Error%s: %s" : "<line %d> Error %s: %s"), line, location, msg)
+        );
         hadError = true;
+    }
+
+    static void runtimeError(RuntimeError error) {
+        System.err.println(
+            String.format("<line %d> %s", error.token.line, error.getMessage())
+        );
+        hadRuntimeError = true;
     }
 }
