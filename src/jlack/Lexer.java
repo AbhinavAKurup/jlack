@@ -177,7 +177,8 @@ public class Lexer {
     private static final Map<String, TokenType> keywords;
     static {
         keywords = new HashMap<>();
-        keywords.put("print", PRINT);
+        keywords.put("write", WRITE);
+        keywords.put("writeln", WRITELN);
         keywords.put("let", LET);
         keywords.put("true", TRUE);
         keywords.put("false", FALSE);

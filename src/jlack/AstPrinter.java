@@ -1,5 +1,8 @@
 package jlack;
 
+import jlack.Expr.Assign;
+import jlack.Expr.Variable;
+
 class AstPrinter implements Expr.Visitor<String> {
     public static void main(String[] args) {
         Expr expression = new Expr.Binary(
@@ -50,5 +53,17 @@ class AstPrinter implements Expr.Visitor<String> {
         builder.append(')');
 
         return builder.toString();
+    }
+
+    @Override
+    public String visitVariableExpr(Variable expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitVariableExpr'");
+    }
+
+    @Override
+    public String visitAssignExpr(Assign expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitAssignExpr'");
     }
 }

@@ -1,0 +1,67 @@
+//tool/GenerateAst.java
+package jlack;
+
+import java.util.List;
+
+abstract class Stmt {
+    interface Visitor<R> {
+        R visitBlockStmt(Block stmt);
+        R visitExpressionStmt(Expression stmt);
+        R visitWriteStmt(Write stmt);
+        R visitLetStmt(Let stmt);
+    }
+    static class Block extends Stmt {
+        Block(List<Stmt> statements) {
+            this.statements = statements;
+        }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitBlockStmt(this);
+    }
+
+        final List<Stmt> statements;
+    }
+    static class Expression extends Stmt {
+        Expression(Expr expression) {
+            this.expression = expression;
+        }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitExpressionStmt(this);
+    }
+
+        final Expr expression;
+    }
+    static class Write extends Stmt {
+        Write(Expr expression, String end) {
+            this.expression = expression;
+            this.end = end;
+        }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitWriteStmt(this);
+    }
+
+        final Expr expression;
+        final String end;
+    }
+    static class Let extends Stmt {
+        Let(Token name, Expr initialiser) {
+            this.name = name;
+            this.initialiser = initialiser;
+        }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitLetStmt(this);
+    }
+
+        final Token name;
+        final Expr initialiser;
+    }
+
+    abstract <R> R accept(Visitor<R> visitor);
+}

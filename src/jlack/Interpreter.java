@@ -1,10 +1,15 @@
 package jlack;
 
-public class Interpreter implements Expr.Visitor<Object> {
-    void interpret(Expr expression) {
+import java.util.List;
+
+public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+    Env env = new Env();
+
+    void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
         } catch (RuntimeError error) {
             Lack.runtimeError(error);
         }
@@ -74,8 +79,65 @@ public class Interpreter implements Expr.Visitor<Object> {
         return null;
     }
 
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) {
+        return env.get(expr.name);
+    }
+
+    @Override
+    public Object visitAssignExpr(Expr.Assign expr) {
+        Object val = evaluate(expr.value);
+        env.assign(expr.name, val);
+        return val;
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitWriteStmt(Stmt.Write stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.print(stringify(value) + stmt.end);
+        return null;
+    }
+
+    @Override
+    public Void visitLetStmt(Stmt.Let stmt) {
+        Object val = null;
+        if (stmt.initialiser != null) {
+            val = evaluate(stmt.initialiser);
+        }
+        env.define(stmt.name.lexeme, val);
+        return null;
+    }
+
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        executeBlock(stmt.statements, new Env(env));
+        return null;
+    }
+
     private Object evaluate(Expr expr) {
         return expr.accept(this);
+    }
+
+    private void execute(Stmt stmt) {
+        stmt.accept(this);
+    }
+
+    void executeBlock(List<Stmt> statements, Env env) {
+        Env previous = this.env;
+        try {
+            this.env = env;
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
+        } finally {
+            this.env = previous;
+        }
     }
 
     private boolean isTruthy(Object object) {

@@ -1,5 +1,6 @@
 package jlack;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static jlack.TokenType.*;
@@ -14,16 +15,78 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    Expr parse() {
+    List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!isAtEnd()) {
+            statements.add(declaration());
+        }
+        return statements;
+    }
+
+    private Expr expression() {
+        return assignment();
+    }
+
+    private Stmt statement() {
+        if (match(WRITE)) return writeStatement("");
+        if (match(WRITELN)) return writeStatement("\n");
+        if (match(LEFT_CURLY)) return new Stmt.Block(block());
+        return expressionStatement();
+    }
+
+    private Stmt declaration() {
         try {
-            return expression();
+            if (match(LET)) return varDeclaration();
+            return statement();
         } catch (ParseError error) {
+            synchronise();
             return null;
         }
     }
 
-    private Expr expression() {
-        return equality();
+    private Stmt writeStatement(String end) {
+        Expr value = expression();
+        consume(SEMICOLON, "Expected ';' after value");
+        return new Stmt.Write(value, end);
+    }
+
+    private Stmt varDeclaration() {
+        Token name = consume(IDENTIFIER, "Expected variable name");
+        Expr initialiser = null;
+        if (match(EQUAL)) {
+            initialiser = expression();
+        }
+        consume(SEMICOLON, "Expected ';' after variable declaration");
+        return new Stmt.Let(name, initialiser);
+    }
+
+    private Stmt expressionStatement() {
+        Expr expr = expression();
+        consume(SEMICOLON, "Expected ';' after value");
+        return new Stmt.Expression(expr);
+    }
+
+    private List<Stmt> block() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!check(RIGHT_CURLY) && !isAtEnd()) statements.add(declaration());
+        consume(RIGHT_CURLY, "Expected '}' after block");
+        return statements;
+    }
+
+    private Expr assignment() {
+        Expr expr = equality();
+        if (match(EQUAL)) {
+            Token equals = peek(-1);
+            Expr value = assignment();
+
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            }
+
+            error(equals, "Invalid assignment target");
+        }
+        return expr;
     }
 
     private Expr equality() {
@@ -81,6 +144,7 @@ public class Parser {
         if (match(FALSE)) return new Expr.Literal(false);
         if (match(NIL)) return new Expr.Literal(null);
         if (match(NUMBER, STRING)) return new Expr.Literal(peek(-1).literal);
+        if (match(IDENTIFIER)) return new Expr.Variable(peek(-1));
         if (match(LEFT_PAREN)) {
             Expr expr = expression();
             consume(RIGHT_PAREN, "Expected ')' after expression");
@@ -125,7 +189,8 @@ public class Parser {
             if (peek(-1).type == SEMICOLON) return;
 
             switch (peek().type) {
-                case PRINT:
+                case WRITE:
+                case WRITELN:
                 case LET:
                 case IF:
                 case FOR:

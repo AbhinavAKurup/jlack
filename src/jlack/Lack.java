@@ -49,17 +49,14 @@ public class Lack {
     public static void run(String source) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.lexTokens();
-
-        // for (Token token : tokens) {
-        //     System.out.println(token);
-        // }
+        // for (Token token : tokens) System.out.println(token);
 
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
 
         if (hadError) return;
         // System.out.println(new AstPrinter().print(expression));
-        interpreter.interpret(expression);
+        interpreter.interpret(statements);
     }
 
     static void error(int line, String msg) {
