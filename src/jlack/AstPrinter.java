@@ -1,6 +1,7 @@
 package jlack;
 
 import jlack.Expr.Assign;
+import jlack.Expr.Logical;
 import jlack.Expr.Variable;
 
 class AstPrinter implements Expr.Visitor<String> {
@@ -65,5 +66,11 @@ class AstPrinter implements Expr.Visitor<String> {
     public String visitAssignExpr(Assign expr) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visitAssignExpr'");
+    }
+
+    @Override
+    public String visitLogicalExpr(Logical expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitLogicalExpr'");
     }
 }

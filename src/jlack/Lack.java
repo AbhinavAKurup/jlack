@@ -29,6 +29,7 @@ public class Lack {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
+        System.out.println("jlack shell");
         for (;;) {
             System.out.print("> ");
             String line = reader.readLine();

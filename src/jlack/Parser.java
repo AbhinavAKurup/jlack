@@ -31,6 +31,7 @@ public class Parser {
         if (match(WRITE)) return writeStatement("");
         if (match(WRITELN)) return writeStatement("\n");
         if (match(LEFT_CURLY)) return new Stmt.Block(block());
+        if (match(IF)) return ifStatement();
         return expressionStatement();
     }
 
@@ -48,6 +49,17 @@ public class Parser {
         Expr value = expression();
         consume(SEMICOLON, "Expected ';' after value");
         return new Stmt.Write(value, end);
+    }
+
+    private Stmt ifStatement() {
+        Expr condition = expression();
+
+        Stmt thenBranch = statement();
+        Stmt elseBranch = null;
+        if (match(ELSE)) {
+            elseBranch = statement();
+        }
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
     private Stmt varDeclaration() {
@@ -74,7 +86,7 @@ public class Parser {
     }
 
     private Expr assignment() {
-        Expr expr = equality();
+        Expr expr = or();
         if (match(EQUAL)) {
             Token equals = peek(-1);
             Expr value = assignment();
@@ -85,6 +97,56 @@ public class Parser {
             }
 
             error(equals, "Invalid assignment target");
+        }
+        return expr;
+    }
+
+    private Expr or() {
+        Expr expr = xor();
+        while (match(OR, NOR)) {
+            Token operator = peek(-1);
+            Expr right = xor();
+
+            if (operator.type == NOR) {
+                Token not = new Token(NOT, "nor", null, operator.line);
+                expr = new Expr.Unary(not, new Expr.Logical(expr, operator, right));
+                return expr;
+            }
+            expr = new Expr.Logical(expr, operator, right);
+        }
+        return expr;
+    }
+
+    private Expr xor() {
+        Expr expr = and();
+        while (match(XOR)) {
+            Token operator = peek(-1);
+            Expr right = and();
+
+            Token not = new Token(NOT, "xor", null, operator.line);
+            Token or = new Token(OR, "xor", null, operator.line);
+            Token and = new Token(AND, "xor", null, operator.line);
+            expr = new Expr.Logical(
+                new Expr.Logical(expr, and, new Expr.Unary(not, right)),
+                or,
+                new Expr.Logical(new Expr.Unary(not, expr), and, right)
+            );
+        }
+        return expr;
+    }
+
+    private Expr and() {
+        Expr expr = equality();
+        while (match(AND, NAND)) {
+            Token operator = peek(-1);
+            Expr right = equality();
+            expr = new Expr.Logical(expr, operator, right);
+
+            if (operator.type == NAND) {
+                Token not = new Token(NOT, "nand", null, operator.line);
+                expr = new Expr.Unary(not, new Expr.Logical(expr, operator, right));
+                return expr;
+            }
         }
         return expr;
     }

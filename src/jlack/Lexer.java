@@ -189,6 +189,8 @@ public class Lexer {
         keywords.put("or", OR);
         keywords.put("and", AND);
         keywords.put("xor", XOR);
+        keywords.put("nor", NOR);
+        keywords.put("nand", NAND);
         keywords.put("for", FOR);
         keywords.put("while", WHILE);
         keywords.put("fun", FUN);
