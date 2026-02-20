@@ -193,6 +193,8 @@ public class Lexer {
         keywords.put("nand", NAND);
         keywords.put("for", FOR);
         keywords.put("while", WHILE);
+        keywords.put("repeat", REPEAT);
+        keywords.put("until", UNTIL);
         keywords.put("fun", FUN);
         keywords.put("return", RETURN);
         keywords.put("class", CLASS);

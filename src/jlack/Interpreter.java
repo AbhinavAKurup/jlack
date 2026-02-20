@@ -141,6 +141,40 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt) {
+        while (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.body);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitRepeatUntilStmt(Stmt.RepeatUntil stmt) {
+        for (;;) {
+            execute(stmt.body);
+            if (isTruthy(evaluate(stmt.condition))) break;
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitRepeatForStmt(Stmt.RepeatFor stmt) {
+        Object times = evaluate(stmt.times);
+        Double n = 0.0;
+        if (!(times instanceof Double)) {
+            throw new RuntimeError(stmt.forToken, "Expected integer after 'for'");
+        }
+        n = (Double) times;
+        if (n % 1 != 0) {
+            throw new RuntimeError(stmt.forToken, "Expected integer after 'for'");
+        }
+        for (int i=0; i < n; i++) {
+            execute(stmt.body);
+        }
+        return null;
+    }
+
     private Object evaluate(Expr expr) {
         return expr.accept(this);
     }

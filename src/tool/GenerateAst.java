@@ -31,7 +31,10 @@ public class GenerateAst {
             "Expression : Expr expression",
             "Write      : Expr expression, String end",
             "Let        : Token name, Expr initialiser",
-            "If         : Expr condition, Stmt thenBranch, Stmt elseBranch"
+            "If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
+            "While      : Expr condition, Stmt body",
+            "RepeatUntil: Expr condition, Stmt body",
+            "RepeatFor  : Expr times, Stmt body, Token forToken"
         ));
     }
 

@@ -1,6 +1,7 @@
 package jlack;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static jlack.TokenType.*;
@@ -32,6 +33,9 @@ public class Parser {
         if (match(WRITELN)) return writeStatement("\n");
         if (match(LEFT_CURLY)) return new Stmt.Block(block());
         if (match(IF)) return ifStatement();
+        if (match(WHILE)) return whileStatement();
+        if (match(FOR)) return forStatement();
+        if (match(REPEAT)) return repeatStatement();
         return expressionStatement();
     }
 
@@ -60,6 +64,66 @@ public class Parser {
             elseBranch = statement();
         }
         return new Stmt.If(condition, thenBranch, elseBranch);
+    }
+
+    private Stmt whileStatement() {
+        Expr condition = expression();
+        Stmt body = statement();
+        return new Stmt.While(condition, body);
+    }
+
+    private Stmt repeatStatement() {
+        Stmt body = statement();
+        if (match(UNTIL)) {
+            Expr condition = expression();
+            return new Stmt.RepeatUntil(condition, body);
+        } else if (match(FOR)) {
+                Token forToken = peek(-1);
+                Expr times = term();
+                return new Stmt.RepeatFor(times, body, forToken);
+        }
+        throw error(peek(), "Expected 'until' or 'for'");
+    }
+
+    private Stmt forStatement() {
+        Stmt initialiser;
+        if (match(SEMICOLON)) initialiser = null;
+        else if (match(LET)) {
+            initialiser = varDeclaration();
+        } else {
+            initialiser = expressionStatement();
+        }
+        
+        Expr condition = null;
+        if (!check(SEMICOLON)) condition = expression();
+        consume(SEMICOLON, "Expected ';' after loop condition");
+
+        Expr increment = null;
+        if (!check(SEMICOLON)) {
+            increment = expression();
+        }
+        consume(SEMICOLON, "Expected ; after loop increment");
+
+        Stmt body = statement();
+
+        if (increment != null) {
+            body = new Stmt.Block(Arrays.asList(
+                body,
+                new Stmt.Expression(increment)
+            ));
+        }
+
+        if (condition == null) condition = new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+
+        if (initialiser != null) {
+            body = new Stmt.Block(Arrays.asList(
+                initialiser,
+                body
+            ));
+        }
+
+        return body;
     }
 
     private Stmt varDeclaration() {

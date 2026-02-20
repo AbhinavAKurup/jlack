@@ -10,6 +10,9 @@ abstract class Stmt {
         R visitWriteStmt(Write stmt);
         R visitLetStmt(Let stmt);
         R visitIfStmt(If stmt);
+        R visitWhileStmt(While stmt);
+        R visitRepeatUntilStmt(RepeatUntil stmt);
+        R visitRepeatForStmt(RepeatFor stmt);
     }
     static class Block extends Stmt {
         Block(List<Stmt> statements) {
@@ -78,6 +81,50 @@ abstract class Stmt {
         final Expr condition;
         final Stmt thenBranch;
         final Stmt elseBranch;
+    }
+    static class While extends Stmt {
+        While(Expr condition, Stmt body) {
+            this.condition = condition;
+            this.body = body;
+        }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitWhileStmt(this);
+    }
+
+        final Expr condition;
+        final Stmt body;
+    }
+    static class RepeatUntil extends Stmt {
+        RepeatUntil(Expr condition, Stmt body) {
+            this.condition = condition;
+            this.body = body;
+        }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitRepeatUntilStmt(this);
+    }
+
+        final Expr condition;
+        final Stmt body;
+    }
+    static class RepeatFor extends Stmt {
+        RepeatFor(Expr times, Stmt body, Token forToken) {
+            this.times = times;
+            this.body = body;
+            this.forToken = forToken;
+        }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitRepeatForStmt(this);
+    }
+
+        final Expr times;
+        final Stmt body;
+        final Token forToken;
     }
 
     abstract <R> R accept(Visitor<R> visitor);

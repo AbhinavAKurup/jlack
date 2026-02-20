@@ -1,0 +1,43 @@
+comments (// and /* */)
+strings ("" or '')
+
+numbers (int/float) :-
+    1. .1 allowed but not 1.
+    2. always strips away .0 when converted to string
+
+basic arithmetic (+, -, *, /) :-
+    1. division by 0 returns Inf
+    2. operations with Inf sometimes return NaN
+
+write, writeln
+variables (let) :-
+    let a = 1;
+    writeln a=2;
+    output: 2
+
+if-else statements :-
+    1. does not require parentheses for condition
+    2. else always belongs to its closest if
+    3. if <condition> <ifBody> else if <condition> <elseifBody> else <elseBody>
+    4. elseif statements are similar to java
+    if <condition> {
+
+    } else if <condition> {
+
+    } else {
+
+    }
+
+while loop
+
+repeat-until & repeat-for :-
+repeat {
+    <body>
+} until/for <condition/integer>
+
+for loop :- 
+    1. parentheses are not allowed for the loop header
+    2. 3 semicolons are compulsory
+for ;;; {
+    <infinite loop>
+}
