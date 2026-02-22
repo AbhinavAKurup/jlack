@@ -41,3 +41,5 @@ for loop :-
 for ;;; {
     <infinite loop>
 }
+
+break, continue (for, while, repeat-until/for)

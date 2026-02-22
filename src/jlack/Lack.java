@@ -81,7 +81,7 @@ public class Lack {
 
     static void runtimeError(RuntimeError error) {
         System.err.println(
-            String.format("<line %d> %s", error.token.line, error.getMessage())
+            String.format("<line %d> RuntimeError: %s", error.token.line, error.getMessage())
         );
         hadRuntimeError = true;
     }

@@ -1,9 +1,15 @@
 package jlack;
 
+import static jlack.TokenType.IDENTIFIER;
+
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     Env env = new Env();
+
+    private boolean isInLoop = false;
+    private boolean breakSignal = false;
+    private boolean continueSignal = false;
 
     void interpret(List<Stmt> statements) {
         try {
@@ -143,18 +149,62 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitWhileStmt(Stmt.While stmt) {
+        isInLoop = true;
         while (isTruthy(evaluate(stmt.condition))) {
+            isInLoop = true;
+            if (breakSignal) {
+                breakSignal = false;
+                continueSignal = false;
+                break;
+            }
             execute(stmt.body);
+            isInLoop = true;
+            if (breakSignal) {
+                breakSignal = false;
+                continueSignal = false;
+                break;
+            }
+            breakSignal = false;
+
+            if (stmt.increment != null) evaluate(stmt.increment);
+            if (continueSignal) {
+                continueSignal = false;
+                continue;
+            }
         }
+        breakSignal = false;
+        continueSignal = false;
+        isInLoop = false;
         return null;
     }
 
     @Override
     public Void visitRepeatUntilStmt(Stmt.RepeatUntil stmt) {
+        isInLoop = true;
         for (;;) {
+            isInLoop = true;
+            if (breakSignal) {
+                breakSignal = false;
+                continueSignal = false;
+                break;
+            }
             execute(stmt.body);
+            isInLoop = true;
+            if (breakSignal) {
+                breakSignal = false;
+                continueSignal = false;
+                break;
+            }
+            breakSignal = false;
+
             if (isTruthy(evaluate(stmt.condition))) break;
+
+            if (continueSignal) {
+                continueSignal = false;
+                continue;
+            }
         }
+        isInLoop = false;
         return null;
     }
 
@@ -169,9 +219,39 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (n % 1 != 0) {
             throw new RuntimeError(stmt.forToken, "Expected integer after 'for'");
         }
+        isInLoop = true;
         for (int i=0; i < n; i++) {
+            isInLoop = true;
+            if (breakSignal) {
+                breakSignal = false;
+                continueSignal = false;
+                break;
+            }
             execute(stmt.body);
+            isInLoop = true;
+            if (breakSignal) {
+                breakSignal = false;
+                continueSignal = false;
+                break;
+            }
+            breakSignal = false;
+
+            if (continueSignal) {
+                continueSignal = false;
+                continue;
+            }
         }
+        isInLoop = false;
+        return null;
+    }
+
+    @Override
+    public Void visitBreakStmt(Stmt.Break stmt) {
+        return null;
+    }
+
+    @Override
+    public Void visitContinueStmt(Stmt.Continue stmt) {
         return null;
     }
 
@@ -180,6 +260,21 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     private void execute(Stmt stmt) {
+        if (!isInLoop) {
+            if (stmt instanceof Stmt.Break) {
+                Stmt.Break breakStmt = (Stmt.Break) stmt;
+                throw new RuntimeError(breakStmt.token, "'break' must be inside a loop");
+            } else if (stmt instanceof Stmt.Continue) {
+                Stmt.Continue continueStmt = (Stmt.Continue) stmt;
+                throw new RuntimeError(continueStmt.token, "'continue' must be inside a loop");
+            }
+        } else {
+            if (stmt instanceof Stmt.Break) {
+                breakSignal = true;
+            } else if (stmt instanceof Stmt.Continue) {
+                continueSignal = true;
+            }
+        }
         stmt.accept(this);
     }
 
@@ -187,8 +282,29 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Env previous = this.env;
         try {
             this.env = env;
-            for (Stmt statement : statements) {
-                execute(statement);
+            if (isInLoop) {
+                for (Stmt statement : statements) {
+                    if (statement instanceof Stmt.Break || breakSignal) {
+                        breakSignal = true;
+                        break;
+                    } else if (statement instanceof Stmt.Continue || continueSignal) {
+                        continueSignal = true;
+                        break;
+                    }
+                    execute(statement);
+                }
+            } else {
+                for (Stmt statement : statements) {
+                    if (statement instanceof Stmt.Break) {
+                        Stmt.Break breakStmt = (Stmt.Break) statement;
+                        throw new RuntimeError(breakStmt.token, "'break' must be inside a loop");
+                    } else if (statement instanceof Stmt.Continue) {
+                        Stmt.Continue continueStmt = (Stmt.Continue) statement;
+                        throw new RuntimeError(continueStmt.token, "'continue' must be inside a loop");
+                    } else {
+                        execute(statement);
+                    }
+                }
             }
         } finally {
             this.env = previous;

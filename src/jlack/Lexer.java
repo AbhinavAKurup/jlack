@@ -195,6 +195,8 @@ public class Lexer {
         keywords.put("while", WHILE);
         keywords.put("repeat", REPEAT);
         keywords.put("until", UNTIL);
+        keywords.put("break", BREAK);
+        keywords.put("continue", CONTINUE);
         keywords.put("fun", FUN);
         keywords.put("return", RETURN);
         keywords.put("class", CLASS);

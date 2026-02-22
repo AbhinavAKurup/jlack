@@ -36,6 +36,8 @@ public class Parser {
         if (match(WHILE)) return whileStatement();
         if (match(FOR)) return forStatement();
         if (match(REPEAT)) return repeatStatement();
+        if (match(BREAK)) return breakStatement();
+        if (match(CONTINUE)) return continueStatement();
         return expressionStatement();
     }
 
@@ -69,7 +71,7 @@ public class Parser {
     private Stmt whileStatement() {
         Expr condition = expression();
         Stmt body = statement();
-        return new Stmt.While(condition, body);
+        return new Stmt.While(condition, body, null);
     }
 
     private Stmt repeatStatement() {
@@ -102,19 +104,19 @@ public class Parser {
         if (!check(SEMICOLON)) {
             increment = expression();
         }
-        consume(SEMICOLON, "Expected ; after loop increment");
+        consume(SEMICOLON, "Expected ';' after loop increment");
 
         Stmt body = statement();
 
-        if (increment != null) {
-            body = new Stmt.Block(Arrays.asList(
-                body,
-                new Stmt.Expression(increment)
-            ));
-        }
+        // if (increment != null) {
+        //     body = new Stmt.Block(Arrays.asList(
+        //         body,
+        //         new Stmt.Expression(increment)
+        //     ));
+        // }
 
         if (condition == null) condition = new Expr.Literal(true);
-        body = new Stmt.While(condition, body);
+        body = new Stmt.While(condition, body, increment);
 
         if (initialiser != null) {
             body = new Stmt.Block(Arrays.asList(
@@ -124,6 +126,16 @@ public class Parser {
         }
 
         return body;
+    }
+
+    private Stmt breakStatement() {
+        consume(SEMICOLON, "Expected ';' after 'break'");
+        return new Stmt.Break(peek(-2));
+    }
+
+    private Stmt continueStatement() {
+        consume(SEMICOLON, "Expected ';' after 'continue'");
+        return new Stmt.Continue(peek(-2));
     }
 
     private Stmt varDeclaration() {
@@ -321,6 +333,7 @@ public class Parser {
                 case IF:
                 case FOR:
                 case WHILE:
+                case REPEAT:
                 case FUN:
                 case RETURN:
                 case CLASS:
