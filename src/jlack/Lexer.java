@@ -45,6 +45,7 @@ public class Lexer {
             case '+': addToken(PLUS); break;
             case '-': addToken(MINUS); break;
             case '*': addToken(STAR); break;
+            case '%': addToken(MODULO); break;
             case '/':
                 if (match('/')) {
                     while (peek() != '\n' && !isAtEnd()) advance();
@@ -179,6 +180,9 @@ public class Lexer {
         keywords = new HashMap<>();
         keywords.put("write", WRITE);
         keywords.put("writeln", WRITELN);
+        keywords.put("read", READ);
+        keywords.put("readnum", READNUM);
+        keywords.put("eval", EVAL);
         keywords.put("let", LET);
         keywords.put("true", TRUE);
         keywords.put("false", FALSE);
@@ -191,6 +195,7 @@ public class Lexer {
         keywords.put("xor", XOR);
         keywords.put("nor", NOR);
         keywords.put("nand", NAND);
+        keywords.put("xnor", XNOR);
         keywords.put("for", FOR);
         keywords.put("while", WHILE);
         keywords.put("repeat", REPEAT);

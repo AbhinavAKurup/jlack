@@ -31,6 +31,8 @@ public class Parser {
     private Stmt statement() {
         if (match(WRITE)) return writeStatement("");
         if (match(WRITELN)) return writeStatement("\n");
+        if (match(READ)) return readStatement();
+        if (match(READNUM)) return readNumStatement();
         if (match(LEFT_CURLY)) return new Stmt.Block(block());
         if (match(IF)) return ifStatement();
         if (match(WHILE)) return whileStatement();
@@ -55,6 +57,26 @@ public class Parser {
         Expr value = expression();
         consume(SEMICOLON, "Expected ';' after value");
         return new Stmt.Write(value, end);
+    }
+
+    private Stmt readStatement() {
+        Token token = peek(-1);
+        Token name = consume(IDENTIFIER, "Expected variable name");
+        consume(SEMICOLON, "Expected ';' after variable name");
+        return new Stmt.Read(name, token);
+    }
+
+    private Stmt readNumStatement() {
+        Token token = peek(-1);
+        Token name = consume(IDENTIFIER, "Expected variable name");
+        consume(SEMICOLON, "Expected ';' after variable name");
+        return new Stmt.ReadNum(name, token);
+    }
+
+    private Expr evalExpr() {
+        Token token = peek(-1);
+        Expr string = primary();
+        return new Expr.Eval(string, token);
     }
 
     private Stmt ifStatement() {
@@ -183,19 +205,20 @@ public class Parser {
             Token operator = peek(-1);
             Expr right = xor();
 
+            if (operator.type == OR) expr = new Expr.Logical(expr, operator, right);
+            
             if (operator.type == NOR) {
                 Token not = new Token(NOT, "nor", null, operator.line);
-                expr = new Expr.Unary(not, new Expr.Logical(expr, operator, right));
-                return expr;
+                Token or = new Token(OR, "nor", null, operator.line);
+                expr = new Expr.Unary(not, new Expr.Logical(expr, or, right));
             }
-            expr = new Expr.Logical(expr, operator, right);
         }
         return expr;
     }
 
     private Expr xor() {
         Expr expr = and();
-        while (match(XOR)) {
+        while (match(XOR, XNOR)) {
             Token operator = peek(-1);
             Expr right = and();
 
@@ -207,6 +230,10 @@ public class Parser {
                 or,
                 new Expr.Logical(new Expr.Unary(not, expr), and, right)
             );
+
+            if (operator.type == XNOR) {
+                expr = new Expr.Unary(not, expr);
+            }
         }
         return expr;
     }
@@ -216,12 +243,13 @@ public class Parser {
         while (match(AND, NAND)) {
             Token operator = peek(-1);
             Expr right = equality();
-            expr = new Expr.Logical(expr, operator, right);
+
+            if (operator.type == AND) expr = new Expr.Logical(expr, operator, right);
 
             if (operator.type == NAND) {
                 Token not = new Token(NOT, "nand", null, operator.line);
-                expr = new Expr.Unary(not, new Expr.Logical(expr, operator, right));
-                return expr;
+                Token and = new Token(AND, "nand", null, operator.line);
+                expr = new Expr.Unary(not, new Expr.Logical(expr, and, right));
             }
         }
         return expr;
@@ -259,7 +287,7 @@ public class Parser {
 
     private Expr factor() {
         Expr expr = unary();
-        while (match(STAR, SLASH)) {
+        while (match(STAR, SLASH, MODULO)) {
             Token operator = peek(-1);
             Expr right = unary();
             expr = new Expr.Binary(expr, operator, right);
@@ -329,6 +357,8 @@ public class Parser {
             switch (peek().type) {
                 case WRITE:
                 case WRITELN:
+                case READ:
+                case READNUM:
                 case LET:
                 case IF:
                 case FOR:

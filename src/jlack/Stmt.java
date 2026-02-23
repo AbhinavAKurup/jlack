@@ -8,6 +8,8 @@ abstract class Stmt {
         R visitBlockStmt(Block stmt);
         R visitExpressionStmt(Expression stmt);
         R visitWriteStmt(Write stmt);
+        R visitReadStmt(Read stmt);
+        R visitReadNumStmt(ReadNum stmt);
         R visitLetStmt(Let stmt);
         R visitIfStmt(If stmt);
         R visitWhileStmt(While stmt);
@@ -53,6 +55,34 @@ abstract class Stmt {
 
         final Expr expression;
         final String end;
+    }
+    static class Read extends Stmt {
+        Read(Token name, Token token) {
+            this.name = name;
+            this.token = token;
+        }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitReadStmt(this);
+    }
+
+        final Token name;
+        final Token token;
+    }
+    static class ReadNum extends Stmt {
+        ReadNum(Token name, Token token) {
+            this.name = name;
+            this.token = token;
+        }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitReadNumStmt(this);
+    }
+
+        final Token name;
+        final Token token;
     }
     static class Let extends Stmt {
         Let(Token name, Expr initialiser) {

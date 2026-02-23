@@ -1,0 +1,18 @@
+writeln "Welcome to FizzBuzz!";
+
+write "Enter range start (default=1): ";
+let start;
+readnum start;
+if start == nil start = 1;
+
+write "Enter range stop (default=100): ";
+let stop;
+readnum stop;
+if stop == nil stop = 100;
+
+for let i = start; i <= stop; i = i+1; {
+    if i % 3 nor i % 5 writeln "fizzbuzz!";
+    else if i % 3 == 0 writeln "fizz";
+    else if i % 5 == 0 writeln "buzz";
+    else writeln i;
+}

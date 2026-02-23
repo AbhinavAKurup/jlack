@@ -5,11 +5,22 @@ numbers (int/float) :-
     1. .1 allowed but not 1.
     2. always strips away .0 when converted to string
 
-basic arithmetic (+, -, *, /) :-
+basic arithmetic operators (+, -, *, /, %) :-
     1. division by 0 returns Inf
     2. operations with Inf sometimes return NaN
+    3. string concatenation using +
+    4. string repetition against integer value using *
+    5. modulo with non-integer numbers allowed
+
+logical operators :-
+not
+or, xor, and
+nor, xnor, nand
+
 
 write, writeln
+read, readnum (returns nil for no input or invalid number)
+
 variables (let) :-
     let a = 1;
     writeln a=2;
@@ -43,3 +54,6 @@ for ;;; {
 }
 
 break, continue (for, while, repeat-until/for)
+
+future:
+eval, augmented assignment operators, exponent operator

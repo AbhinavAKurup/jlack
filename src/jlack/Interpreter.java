@@ -1,11 +1,14 @@
 package jlack;
 
-import static jlack.TokenType.IDENTIFIER;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     Env env = new Env();
+    InputStreamReader input = new InputStreamReader(System.in);
+    BufferedReader reader = new BufferedReader(input);
 
     private boolean isInLoop = false;
     private boolean breakSignal = false;
@@ -63,7 +66,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 return (double)left < (double)right;
             case LESS_EQUAL:
                 checkNumberOperands(expr.operator, left, right);
-                return (double)left >= (double)right;
+                return (double)left <= (double)right;
             case PLUS:
                 if (left instanceof Double && right instanceof Double) {
                     return (double)left + (double)right;
@@ -76,11 +79,45 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 checkNumberOperands(expr.operator, left, right);
                 return (double)left - (double)right;
             case STAR:
+                String string = null;
+                Double number = 0.0;
+                if (left instanceof String) {
+                    if (right instanceof Double) {
+                        string = (String) left;
+                        number = (Double) right;
+                        if (number % 1 != 0) throw new RuntimeError(expr.operator, "String can only be multiplied by int");
+                    } else {
+                        throw new RuntimeError(expr.operator, "String can only be multiplied by int");
+                    }
+                } else if (right instanceof String) {
+                    if (left instanceof Double) {
+                        string = (String) right;
+                        number = (Double) left;
+                        if (number % 1 != 0) throw new RuntimeError(expr.operator, "String can only be multiplied by int");
+                    } else {
+                        throw new RuntimeError(expr.operator, "String can only be multiplied by int");
+                    }
+                }
+                if (string != null) {
+                    double d = (double) number;
+                    int i = (int) d;
+                    return string.repeat(i);
+                }
+
                 checkNumberOperands(expr.operator, left, right);
                 return (double)left * (double)right;
             case SLASH:
                 checkNumberOperands(expr.operator, left, right);
+                if ((double) right == 0) {
+                    throw new RuntimeError(expr.operator, "Division by zero");
+                }
                 return (double)left / (double)right;
+            case MODULO:
+                checkNumberOperands(expr.operator, left, right);
+                if ((double) right == 0) {
+                    throw new RuntimeError(expr.operator, "Modulo by zero");
+                }
+                return (double)left % (double)right;
         }
         return null;
     }
@@ -122,6 +159,38 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitReadStmt(Stmt.Read stmt) {
+        Object val = getUserInput(false, stmt.token);
+        env.assign(stmt.name, val);
+        return null;
+    }
+
+    @Override
+    public Void visitReadNumStmt(Stmt.ReadNum stmt) {
+        Object val = getUserInput(true, stmt.token);
+        env.assign(stmt.name, val);
+        return null;
+    }
+
+    @Override
+    public Object visitEvalExpr(Expr.Eval expr) {
+        Object value = evaluate(expr.string);
+        // Lexer lexer = new Lexer(value);
+        // List<Token> tokens = lexer.lexTokens();
+        // // for (Token token : tokens) System.out.println(token);
+
+        // Parser parser = new Parser(tokens);
+        // List<Stmt> statements = parser.parse();
+
+        // if (hadError) return;
+        // // System.out.println(new AstPrinter().print(expression));
+        // final Interpreter interpreter = new Interpreter();
+        // interpreter.evaluate(statements);
+
+        return null;
+    }
+
+    @Override
     public Void visitLetStmt(Stmt.Let stmt) {
         Object val = null;
         if (stmt.initialiser != null) {
@@ -157,6 +226,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 continueSignal = false;
                 break;
             }
+
             execute(stmt.body);
             isInLoop = true;
             if (breakSignal) {
@@ -349,5 +419,21 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             return text;
         }
         return object.toString();
+    }
+    
+    private Object getUserInput(boolean isNum, Token token) {
+        Object result = null;
+        try {
+            String text = reader.readLine();
+
+            if (isNum) {
+                result = Double.parseDouble(text);
+            } else {
+                result = text;
+            }
+        } catch (IOException error) {
+            throw new RuntimeError(token, "Invalid input");
+        } catch (NumberFormatException error) {}
+        return result;
     }
 }
